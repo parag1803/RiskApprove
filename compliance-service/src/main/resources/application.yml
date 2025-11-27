@@ -1,0 +1,21 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: compliance-service
+  data:
+    mongodb:
+      host: ${MONGODB_HOST:localhost}
+      port: ${MONGODB_PORT:27017}
+      database: riskapprove
+
+rag:
+  service:
+    url: ${RAG_SERVICE_URL:http://localhost:5002}
+
+logging:
+  level:
+    com.riskapprove: INFO
+    org.springframework: WARN
+

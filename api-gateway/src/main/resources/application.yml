@@ -1,0 +1,28 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+services:
+  data:
+    url: ${DATA_SERVICE_URL:http://localhost:8081}
+  compliance:
+    url: ${COMPLIANCE_SERVICE_URL:http://localhost:8082}
+  portfolio:
+    url: ${PORTFOLIO_SERVICE_URL:http://localhost:8083}
+
+openai:
+  api:
+    key: ${OPENAI_API_KEY:}
+
+huggingface:
+  api:
+    key: ${HUGGINGFACE_API_KEY:}
+
+logging:
+  level:
+    com.riskapprove: INFO
+    org.springframework: WARN
+

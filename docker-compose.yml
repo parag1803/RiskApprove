@@ -1,0 +1,143 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: riskapprove-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: riskapprove
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - riskapprove-network
+
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: riskapprove-ml-service
+    ports:
+      - "5001:5001"
+    environment:
+      - FLASK_ENV=production
+      - PORT=5001
+    networks:
+      - riskapprove-network
+    depends_on:
+      - mongodb
+
+  rag-service:
+    build:
+      context: ./rag-service
+      dockerfile: Dockerfile
+    container_name: riskapprove-rag-service
+    ports:
+      - "5002:5002"
+    environment:
+      - FLASK_ENV=production
+      - PORT=5002
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - HUGGINGFACE_API_KEY=${HUGGINGFACE_API_KEY:-}
+    volumes:
+      - ./regulations:/app/regulations:ro
+      - rag_embeddings:/app/embeddings
+    networks:
+      - riskapprove-network
+    depends_on:
+      - mongodb
+
+  data-service:
+    build:
+      context: ./data-service
+      dockerfile: Dockerfile
+    container_name: riskapprove-data-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - ML_SERVICE_URL=http://ml-service:5001
+      - MONGODB_HOST=mongodb
+      - MONGODB_PORT=27017
+    networks:
+      - riskapprove-network
+    depends_on:
+      - mongodb
+      - ml-service
+
+  compliance-service:
+    build:
+      context: ./compliance-service
+      dockerfile: Dockerfile
+    container_name: riskapprove-compliance-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - RAG_SERVICE_URL=http://rag-service:5002
+      - MONGODB_HOST=mongodb
+      - MONGODB_PORT=27017
+    networks:
+      - riskapprove-network
+    depends_on:
+      - mongodb
+      - rag-service
+
+  portfolio-service:
+    build:
+      context: ./portfolio-service
+      dockerfile: Dockerfile
+    container_name: riskapprove-portfolio-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - MONGODB_HOST=mongodb
+      - MONGODB_PORT=27017
+    networks:
+      - riskapprove-network
+    depends_on:
+      - mongodb
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: riskapprove-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DATA_SERVICE_URL=http://data-service:8081
+      - COMPLIANCE_SERVICE_URL=http://compliance-service:8082
+      - PORTFOLIO_SERVICE_URL=http://portfolio-service:8083
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - HUGGINGFACE_API_KEY=${HUGGINGFACE_API_KEY:-}
+    networks:
+      - riskapprove-network
+    depends_on:
+      - data-service
+      - compliance-service
+      - portfolio-service
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: riskapprove-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080
+    networks:
+      - riskapprove-network
+    depends_on:
+      - api-gateway
+
+networks:
+  riskapprove-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  rag_embeddings:
+

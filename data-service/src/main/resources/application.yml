@@ -1,0 +1,21 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: data-service
+  data:
+    mongodb:
+      host: ${MONGODB_HOST:localhost}
+      port: ${MONGODB_PORT:27017}
+      database: riskapprove
+
+ml:
+  service:
+    url: ${ML_SERVICE_URL:http://localhost:5001}
+
+logging:
+  level:
+    com.riskapprove: INFO
+    org.springframework: WARN
+

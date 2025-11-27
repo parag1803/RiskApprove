@@ -1,0 +1,3 @@
+# Place SEBI/RBI regulation PDFs in this directory
+# The RAG service will automatically load them on startup
+
