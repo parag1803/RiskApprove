@@ -46,25 +46,44 @@ vector_store = None
 
 
 def load_pdf_documents(directory: str) -> List[Document]:
-    """Load all PDF files from the regulations directory"""
+    """Load all PDF and text files from the regulations directory"""
     documents = []
-    pdf_dir = Path(directory)
+    reg_dir = Path(directory)
     
-    if not pdf_dir.exists():
+    if not reg_dir.exists():
         logger.warning(f"Regulations directory {directory} does not exist")
         return documents
     
-    pdf_files = list(pdf_dir.glob('*.pdf'))
+    # Load PDF files
+    pdf_files = list(reg_dir.glob('*.pdf'))
     logger.info(f"Found {len(pdf_files)} PDF files")
     
     for pdf_file in pdf_files:
         try:
-            logger.info(f"Loading {pdf_file.name}")
+            logger.info(f"Loading PDF: {pdf_file.name}")
             loader = PyPDFLoader(str(pdf_file))
             docs = loader.load()
             documents.extend(docs)
         except Exception as e:
             logger.error(f"Error loading {pdf_file}: {str(e)}")
+    
+    # Also load text files for easier testing
+    txt_files = list(reg_dir.glob('*.txt'))
+    logger.info(f"Found {len(txt_files)} text files")
+    
+    for txt_file in txt_files:
+        try:
+            logger.info(f"Loading text file: {txt_file.name}")
+            with open(txt_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+                # Create a Document object similar to PDF loader
+                doc = Document(
+                    page_content=content,
+                    metadata={"source": str(txt_file)}
+                )
+                documents.append(doc)
+        except Exception as e:
+            logger.error(f"Error loading {txt_file}: {str(e)}")
     
     return documents
 

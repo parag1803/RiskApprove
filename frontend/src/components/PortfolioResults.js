@@ -7,7 +7,7 @@ function PortfolioResults({ data, onReset }) {
   // Prepare data for pie chart
   const pieData = Object.entries(data.allocations || {}).map(([symbol, value]) => ({
     name: symbol,
-    value: (value * 100).toFixed(1)
+    value: parseFloat((value * 100).toFixed(1)) // Convert to number, not string
   }));
 
   // Prepare data for bar chart (risk vs return)
@@ -62,41 +62,53 @@ function PortfolioResults({ data, onReset }) {
         {/* Pie Chart */}
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-xl font-bold text-gray-800 mb-4">Portfolio Allocation</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={pieData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {pieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+          {pieData && pieData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => `${value}%`} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-[300px] text-gray-500">
+              <p>No allocation data available</p>
+            </div>
+          )}
         </div>
 
         {/* Bar Chart */}
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-xl font-bold text-gray-800 mb-4">Risk vs Expected Returns</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={barData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="symbol" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="Expected Return (%)" fill="#4F46E5" />
-              <Bar dataKey="Risk Score" fill="#EC4899" />
-            </BarChart>
-          </ResponsiveContainer>
+          {barData && barData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={barData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="symbol" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="Expected Return (%)" fill="#4F46E5" />
+                <Bar dataKey="Risk Score" fill="#EC4899" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-[300px] text-gray-500">
+              <p>No prediction data available</p>
+            </div>
+          )}
         </div>
       </div>
 
