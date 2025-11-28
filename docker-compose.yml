@@ -1,3 +1,8 @@
+###############################################
+# RiskApprove - 100% FREE Open Source Stack
+# NO PAID APIs (No OpenAI, Gemini, Claude)
+###############################################
+
 services:
   mongodb:
     image: mongo:7.0
@@ -10,6 +15,20 @@ services:
       - mongodb_data:/data/db
     networks:
       - riskapprove-network
+
+  # Optional: Ollama for LOCAL LLM inference (completely free & private)
+  # Uncomment to enable local LLM support
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: riskapprove-ollama
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+  #   networks:
+  #     - riskapprove-network
+  #   # Pull mistral model on startup (run once)
+  #   # docker exec riskapprove-ollama ollama pull mistral
 
   ml-service:
     build:
@@ -36,8 +55,11 @@ services:
     environment:
       - FLASK_ENV=production
       - PORT=5002
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - HUGGINGFACE_API_KEY=${HUGGINGFACE_API_KEY:-}
+      # FREE embedding model - runs locally, no API key needed!
+      - EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+      # Alternative FREE models:
+      # - sentence-transformers/all-mpnet-base-v2 (better quality)
+      # - sentence-transformers/multi-qa-MiniLM-L6-cos-v1 (Q&A optimized)
     volumes:
       - ./regulations:/app/regulations:ro
       - rag_embeddings:/app/embeddings
@@ -110,8 +132,13 @@ services:
       - DATA_SERVICE_URL=http://data-service:8081
       - COMPLIANCE_SERVICE_URL=http://compliance-service:8082
       - PORTFOLIO_SERVICE_URL=http://portfolio-service:8083
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      # FREE LLM Options (choose one):
+      # Option 1: HuggingFace Inference API (free tier - 30k requests/month)
+      # Get free API key at: https://huggingface.co/settings/tokens
       - HUGGINGFACE_API_KEY=${HUGGINGFACE_API_KEY:-}
+      # Option 2: Ollama for local LLM (uncomment ollama service above)
+      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_MODEL=mistral
     networks:
       - riskapprove-network
     depends_on:
@@ -140,4 +167,4 @@ networks:
 volumes:
   mongodb_data:
   rag_embeddings:
-
+  # ollama_data:  # Uncomment if using Ollama

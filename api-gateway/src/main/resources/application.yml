@@ -13,16 +13,18 @@ services:
   portfolio:
     url: ${PORTFOLIO_SERVICE_URL:http://localhost:8083}
 
-openai:
-  api:
-    key: ${OPENAI_API_KEY:}
-
+# FREE LLM Configuration - No Paid APIs!
+# Option 1: HuggingFace Inference API (free tier)
 huggingface:
   api:
     key: ${HUGGINGFACE_API_KEY:}
+
+# Option 2: Ollama for local LLM (completely free & private)
+ollama:
+  url: ${OLLAMA_URL:http://localhost:11434}
+  model: ${OLLAMA_MODEL:mistral}
 
 logging:
   level:
     com.riskapprove: INFO
     org.springframework: WARN
-
